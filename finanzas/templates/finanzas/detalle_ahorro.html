@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del Ahorro: {{ ahorro.nombre }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background-color: #f44336;
+        }
+        .navbar a:hover {
+            background-color: #d32f2f;
+        }
+        .container {
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        .movimientos-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .movimientos-list li {
+            background-color: #f9f9f9;
+            margin: 10px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .movimientos-list li .tipo {
+            font-weight: bold;
+        }
+        .movimientos-list li .monto {
+            color: #4CAF50;
+        }
+        .form-container {
+            margin-top: 20px;
+        }
+        .form-container form {
+            margin-bottom: 20px;
+        }
+        .form-container input, .form-container select, .form-container textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .form-container button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #45a049;
+        }
+        .btn-crear {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .btn-crear:hover {
+            background-color: #45a049;
+        }
+        .btn-eliminar {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #fa3a2c;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            
+        }
+        .btn-eliminar:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barra superior -->
+    <div class="navbar">
+        <span>Hola, {{ request.user.username }}</span>
+        <a href="{% url 'login' %}">Cerrar sesión</a>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="container">
+        <h1>Detalle del Ahorro: {{ ahorro.nombre }}</h1>
+
+        <!-- Características del ahorro -->
+        <div class="section">
+            <h2>Características</h2>
+            <p><strong>Monto actual:</strong> ${{ ahorro.monto_actual }}</p>
+            <p><strong>Creado por:</strong> {{ ahorro.creado_por.username }}</p>
+            <p><strong>Es grupal:</strong> {{ ahorro.es_grupal|yesno:"Sí,No" }}</p>
+        </div>
+
+        <!-- Últimos 5 movimientos -->
+        <div class="section">
+            <h2>Últimos 5 movimientos</h2>
+            <ul class="movimientos-list">
+                {% for movimiento in movimientos %}
+                    <li>
+                        <span class="tipo">{{ movimiento.get_tipo_display }}:</span>
+                        <span class="monto">${{ movimiento.monto }}</span>
+                        <br>
+                        <small>{{ movimiento.fecha }}</small>
+                        <br>
+                        <small>{{ movimiento.descripcion }}</small>
+                    </li>
+                {% empty %}
+                    <li>No hay movimientos registrados.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Formulario para agregar personas al ahorro -->
+        <div class="form-container">
+            <h2>Agregar persona al ahorro</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form_agregar_persona.as_p }}
+                <button type="submit" name="agregar_persona">Agregar</button>
+            </form>
+        </div>
+
+        <!-- Formulario para hacer consignaciones y retiros -->
+        <div class="form-container">
+            <h2>Hacer movimiento</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form_movimiento.as_p }}
+                <button type="submit" name="hacer_movimiento">Guardar</button>
+            </form>
+        </div>
+
+        <!-- Botón para darse de baja o eliminar el ahorro -->
+        <div class="section">
+            {% if es_compartido %}
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" name="darse_de_baja" class="btn-eliminar">Darse de baja del ahorro</button>
+                </form>
+            {% elif es_creador %}
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" name="eliminar_ahorro" class="btn-eliminar">Eliminar ahorro</button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- Botón para volver a la lista de ahorros -->
+        <a href="{% url 'home' %}" class="btn-crear">Volver a la lista de ahorros</a>
+    </div>
+</body>
+</html>
