@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mis Ahorros</title>
+    <!-- Incluir SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
+        /* Estilos generales */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -14,7 +17,10 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            display: flex;
         }
+
+        /* Barra de navegación */
         .navbar {
             background-color: #4CAF50;
             color: white;
@@ -22,26 +28,45 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
         }
+
+        .navbar span {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
         .navbar a {
             color: white;
             text-decoration: none;
             padding: 8px 16px;
             border-radius: 4px;
             background-color: #f44336;
+            white-space: nowrap; /* Evita que el texto se divida en varias líneas */
+            margin-left: 10px; /* Espacio entre el texto y el botón */
         }
+
         .navbar a:hover {
             background-color: #d32f2f;
         }
+
+        /* Contenido principal */
         .container {
             padding: 20px;
             background-color: rgba(255, 255, 255, 0.8);
             border-radius: 8px;
-            margin: 20px;
+            margin: 80px 20px 20px 20px;
+            flex: 1;
         }
+
         .search-bar {
             margin-bottom: 20px;
         }
+
         .search-bar input {
             width: 98%;
             padding: 10px;
@@ -49,10 +74,12 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
+
         .ahorro-list {
             list-style-type: none;
             padding: 0;
         }
+
         .ahorro-list li {
             background-color: #f9f9f9;
             margin: 10px 0;
@@ -63,6 +90,7 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .btn-crear {
             display: inline-block;
             padding: 10px 20px;
@@ -71,19 +99,24 @@
             text-decoration: none;
             border-radius: 4px;
             margin-bottom: 20px;
+            text-align: center;
         }
+
         .btn-crear:hover {
             background-color: #45a049;
         }
+
         .solicitud-list {
             margin-top: 20px;
             background: #fff;
             padding: 15px;
             border-radius: 8px;
         }
+
         .solicitud-list h3 {
             margin-bottom: 10px;
         }
+
         .solicitud-list li {
             display: flex;
             justify-content: space-between;
@@ -93,28 +126,135 @@
             border-radius: 5px;
             margin-bottom: 10px;
         }
+
         .solicitud-buttons button {
             margin-left: 5px;
             padding: 5px 10px;
             border: none;
             cursor: pointer;
         }
+
         .btn-aceptar {
             background-color: #4CAF50;
             color: white;
         }
+
         .btn-rechazar {
             background-color: #f44336;
             color: white;
         }
+
+        /* Barra lateral de contactos */
+        .sidebar {
+            width: 300px;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 80px 20px 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            color: #333;
+        }
+
+        .sidebar .search-contacts {
+            margin-bottom: 15px;
+        }
+
+        .sidebar .search-contacts input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .sidebar .form-group {
+            margin-bottom: 15px;
+        }
+
+        .sidebar .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .sidebar .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .sidebar .contacts-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar .contacts-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar .contacts-list li span {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .sidebar .contacts-list li .btn-eliminar {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #f44336;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .sidebar .contacts-list li .btn-eliminar:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Botón "Agregar Contacto" */
+        .btn-agregar-contacto {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-agregar-contacto:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
+    <!-- Barra superior -->
     <div class="navbar">
         <span>Hola, {{ request.user.username }}</span>
         <a href="{% url 'login' %}">Cerrar sesión</a>
     </div>
 
+    <!-- Contenido principal -->
     <div class="container">
         <div class="search-bar">
             <input type="text" id="buscar-ahorro" placeholder="Buscar ahorro...">
@@ -161,7 +301,47 @@
         </div>
     </div>
 
+    <!-- Barra lateral de contactos -->
+    <div class="sidebar">
+        <h3>Contactos</h3>
+        <div class="search-contacts">
+            <input type="text" id="buscar-contacto" placeholder="Buscar contacto...">
+        </div>
+        <form method="post" action="{% url 'agregar_contacto' %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="nombre_usuario">Agregar contacto por nombre de usuario:</label>
+                <input type="text" id="nombre_usuario" name="nombre_usuario" placeholder="Nombre de usuario" required>
+            </div>
+            <button type="submit" class="btn-agregar-contacto">Agregar Contacto</button>
+        </form>
+        <ul class="contacts-list">
+            {% for contacto in contactos %}
+                <li>
+                    <span>{{ contacto.contacto.username }}</span>
+                    <button class="btn-eliminar" onclick="eliminarContacto('{{ contacto.contacto.username }}')">Eliminar</button>
+                </li>
+            {% empty %}
+                <li>No tienes contactos.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Scripts -->
     <script>
+        // Mostrar mensajes de Django como pop-ups
+        {% if messages %}
+            {% for message in messages %}
+                Swal.fire({
+                    icon: '{{ message.tags }}',  // Tipo de mensaje (success, error, warning, etc.)
+                    title: '{{ message }}',     // Contenido del mensaje
+                    showConfirmButton: true,    // Mostrar botón de confirmación
+                    timer: 3000                 // Cerrar automáticamente después de 3 segundos
+                });
+            {% endfor %}
+        {% endif %}
+
+        // Script para buscar ahorros
         document.getElementById('buscar-ahorro').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
             const ahorros = document.querySelectorAll('.ahorro-list li');
@@ -175,6 +355,40 @@
                 }
             });
         });
+
+        // Script para buscar contactos
+        document.getElementById('buscar-contacto').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const contactos = document.querySelectorAll('.contacts-list li');
+
+            contactos.forEach(contacto => {
+                const nombre = contacto.querySelector('span').textContent.toLowerCase();
+                if (nombre.includes(searchTerm)) {
+                    contacto.style.display = 'flex';
+                } else {
+                    contacto.style.display = 'none';
+                }
+            });
+        });
+
+        // Función para eliminar un contacto por nombre de usuario
+        function eliminarContacto(nombreUsuario) {
+            if (confirm(`¿Estás seguro de eliminar a ${nombreUsuario} de tus contactos?`)) {
+                fetch(`/eliminar_contacto/${nombreUsuario}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload(); // Recargar la página para actualizar la lista
+                    }
+                });
+            }
+        }
     </script>
 </body>
 </html>

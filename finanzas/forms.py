@@ -43,3 +43,7 @@ class MovimientoForm(forms.ModelForm):
     class Meta:
         model = Movimiento
         fields = ['tipo', 'monto', 'descripcion']
+
+
+class AgregarContactoForm(forms.Form):
+    usuario = forms.ModelChoiceField(queryset=User.objects.all(), label="Seleccionar usuario")

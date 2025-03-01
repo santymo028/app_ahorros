@@ -1,14 +1,12 @@
-from django.shortcuts import render, redirect
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .forms import AhorroForm
-from .forms import CompartirAhorroForm
-from django.contrib.auth.decorators import login_required
-from finanzas.models import Ahorro, Movimiento, AhorroCompartido
-from finanzas.forms import AgregarPersonaForm, MovimientoForm
+from .forms import AhorroForm, CompartirAhorroForm, AgregarPersonaForm, MovimientoForm
+from .models import Ahorro, Movimiento, AhorroCompartido
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 @login_required
 def crear_ahorro(request):
@@ -26,11 +24,18 @@ def crear_ahorro(request):
 
 @login_required
 def lista_ahorros(request):
+    # Obtener los ahorros del usuario
     ahorros_personales = Ahorro.objects.filter(creado_por=request.user)
     ahorros_compartidos = Ahorro.objects.filter(compartido_con__usuario=request.user)
+    
+    # Obtener la lista de contactos (todos los usuarios excepto el actual)
+    contactos = User.objects.exclude(id=request.user.id)
+    contactos = Contacto.objects.filter(usuario=request.user)  # <--- Esto es clave
+    
     return render(request, 'finanzas/lista_ahorros.html', {
         'ahorros_personales': ahorros_personales,
-        'ahorros_compartidos': ahorros_compartidos
+        'ahorros_compartidos': ahorros_compartidos,
+        'contactos': contactos  # Sin coma al final
     })
 
 @login_required
@@ -46,8 +51,6 @@ def compartir_ahorro(request, ahorro_id):
         form = CompartirAhorroForm()
     return render(request, 'finanzas/compartir_ahorro.html', {'form': form, 'ahorro': ahorro})
 
-
-
 @login_required
 def detalle_ahorro(request, ahorro_id):
     ahorro = get_object_or_404(Ahorro, id=ahorro_id)
@@ -57,10 +60,13 @@ def detalle_ahorro(request, ahorro_id):
     es_compartido = AhorroCompartido.objects.filter(ahorro=ahorro, usuario=request.user).exists()
 
     if not es_creador and not es_compartido:
-        return redirect('home')  # Redirigir si el usuario no tiene acceso
+        return redirect('home')
 
     # Obtener los últimos 5 movimientos
     movimientos = Movimiento.objects.filter(ahorro=ahorro).order_by('-fecha')[:5]
+
+    # Obtener la lista de usuarios con los que se comparte el ahorro
+    usuarios_compartidos = AhorroCompartido.objects.filter(ahorro=ahorro).exclude(usuario=ahorro.creado_por)
 
     # Formulario para agregar personas al ahorro
     if request.method == 'POST' and 'agregar_persona' in request.POST:
@@ -72,7 +78,7 @@ def detalle_ahorro(request, ahorro_id):
     else:
         form_agregar_persona = AgregarPersonaForm()
 
-    # Formulario para hacer consignaciones y retiros
+    # Formulario para hacer movimientos
     if request.method == 'POST' and 'hacer_movimiento' in request.POST:
         form_movimiento = MovimientoForm(request.POST)
         if form_movimiento.is_valid():
@@ -98,6 +104,13 @@ def detalle_ahorro(request, ahorro_id):
         if es_creador:
             ahorro.delete()
             return redirect('home')
+    
+    # Lógica para eliminar un usuario compartido
+    if request.method == 'POST' and 'eliminar_usuario' in request.POST:
+        usuario_id = request.POST.get('usuario_id')
+        if es_creador:
+            AhorroCompartido.objects.filter(ahorro=ahorro, usuario_id=usuario_id).delete()
+            return redirect('detalle_ahorro', ahorro_id=ahorro.id)
 
     return render(request, 'finanzas/detalle_ahorro.html', {
         'ahorro': ahorro,
@@ -106,7 +119,45 @@ def detalle_ahorro(request, ahorro_id):
         'form_movimiento': form_movimiento,
         'es_creador': es_creador,
         'es_compartido': es_compartido,
+        'usuarios_compartidos': usuarios_compartidos,  # <--- Nueva variable
     })
+
+@login_required
+def profile(request):
+    return redirect('home')
+
+def inicio(request):
+    if not User.objects.exists():  # Si no hay usuarios en la base de datos
+        return redirect('registro')  # Redirige a la página de registro
+
+    return render(request, 'inicio.html')  # Si hay usuarios, muestra la página normal
+
+
+from .models import Contacto
+from django.contrib import messages
+
+@login_required
+def agregar_contacto(request):
+    if request.method == 'POST':
+        nombre_usuario = request.POST.get('nombre_usuario')
+        try:
+            contacto = User.objects.get(username=nombre_usuario)
+            if not Contacto.objects.filter(usuario=request.user, contacto=contacto).exists():
+                Contacto.objects.create(usuario=request.user, contacto=contacto)
+                messages.success(request, f"{contacto.username} ha sido agregado a tus contactos.")
+            else:
+                messages.warning(request, f"{contacto.username} ya está en tu lista de contactos.")
+        except User.DoesNotExist:
+            messages.error(request, f"El usuario '{nombre_usuario}' no existe.")
+        return redirect('home')
+
+
+def eliminar_contacto(request, nombre_usuario):
+    if request.method == 'POST':
+        contacto = get_object_or_404(User, username=nombre_usuario)
+        Contacto.objects.filter(usuario=request.user, contacto=contacto).delete()
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
 
 def registro(request):
     if request.method == 'POST':
@@ -114,19 +165,7 @@ def registro(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            return redirect('home')
+            return redirect('home')  # Redirige a la página principal después del registro
     else:
         form = UserCreationForm()
-    return render(request, 'finanzas/registro.html', {'form': form})
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-
-@login_required
-def profile(request):
-    return redirect('home') 
-
-def inicio(request):
-    if not User.objects.exists():  # Si no hay usuarios en la base de datos
-        return redirect('registro')  # Redirige a la página de registro
-
-    return render(request, 'inicio.html')  # Si hay usuarios, muestra la página normal
+    return render(request, 'registration/registro.html', {'form': form})

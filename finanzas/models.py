@@ -49,3 +49,12 @@ class SolicitudRetiro(models.Model):
     def __str__(self):
         estado = "Pendiente" if self.aprobado is None else "Aprobado" if self.aprobado else "Rechazado"
         return f"Retiro de {self.monto} por {self.usuario.username} - {estado}"
+
+    
+class Contacto(models.Model):
+    usuario = models.ForeignKey(User, related_name='contactos_agregados', on_delete=models.CASCADE)
+    contacto = models.ForeignKey(User, related_name='contactos_agregados_por', on_delete=models.CASCADE)
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.contacto.username} (Agregado por {self.usuario.username})"

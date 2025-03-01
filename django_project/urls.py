@@ -25,8 +25,10 @@ urlpatterns = [
     path('crear-ahorro/', views.crear_ahorro, name='crear_ahorro'),
     path('detalle-ahorro/<int:ahorro_id>/', views.detalle_ahorro, name='detalle_ahorro'),
     path('compartir-ahorro/<int:ahorro_id>/', views.compartir_ahorro, name='compartir_ahorro'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+     path('logout/', auth_views.LogoutView.as_view(template_name='finanzas/logout.html'), name='logout'),
     path('login/', auth_views.LoginView.as_view(template_name='finanzas/login.html'), name='login'),  # Iniciar sesión
     path('registro/', views.registro, name='registro'),
     path('accounts/profile/', views.profile, name='profile'),  # Nueva ruta para el perfil
+    path('agregar_contacto/', views.agregar_contacto, name='agregar_contacto'),
+    path('eliminar_contacto/<str:nombre_usuario>/', views.eliminar_contacto, name='eliminar_contacto'),
 ]
