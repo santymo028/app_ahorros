@@ -39,16 +39,15 @@ class AhorroCompartido(models.Model):
     def __str__(self):
         return f"{self.ahorro.nombre} compartido con {self.usuario.username}"
 
-class SolicitudRetiro(models.Model):
-    ahorro = models.ForeignKey(Ahorro, on_delete=models.CASCADE, related_name='solicitudes_retiro')
-    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='solicitudes_retiro')
+class SolicitudAutorizacion(models.Model):
+    ahorro = models.ForeignKey(Ahorro, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
+    descripcion = models.TextField()
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
-    aprobado = models.BooleanField(null=True, blank=True)  # None = Pendiente, True = Aprobado, False = Rechazado
 
     def __str__(self):
-        estado = "Pendiente" if self.aprobado is None else "Aprobado" if self.aprobado else "Rechazado"
-        return f"Retiro de {self.monto} por {self.usuario.username} - {estado}"
+        return f"Solicitud de {self.usuario.username} para retirar ${self.monto} de {self.ahorro.nombre}"
 
     
 class Contacto(models.Model):

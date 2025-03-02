@@ -109,6 +109,8 @@
             background-color: #d32f2f;
         }
     </style>
+    <!-- Incluir SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <!-- Barra superior -->
@@ -182,10 +184,10 @@
         <!-- Formulario para hacer consignaciones y retiros -->
         <div class="form-container">
             <h2>Hacer movimiento</h2>
-            <form method="post">
+            <form method="post" id="movimientoForm">
                 {% csrf_token %}
                 {{ form_movimiento.as_p }}
-                <button type="submit" name="hacer_movimiento">Guardar</button>
+                <button type="submit" name="hacer_movimiento" id="hacerMovimiento">Guardar</button>
             </form>
         </div>
 
@@ -207,5 +209,60 @@
         <!-- Botón para volver a la lista de ahorros -->
         <a href="{% url 'home' %}" class="btn-crear">Volver a la lista de ahorros</a>
     </div>
+
+    <!-- Script para manejar la solicitud de autorización -->
+    <script>
+        document.getElementById('movimientoForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Evitar el envío del formulario por defecto
+
+            const tipoMovimiento = document.querySelector('select[name="tipo"]').value;
+            const esGrupal = {{ ahorro.es_grupal|yesno:"true,false" }};
+
+            if (tipoMovimiento === 'retiro' && esGrupal) {
+                Swal.fire({
+                    title: 'Solicitud de autorización',
+                    text: 'Este ahorro es grupal. Se enviará una solicitud de autorización a los demás usuarios.',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Enviar solicitud',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Enviar la solicitud de autorización
+                        fetch("{% url 'solicitar_autorizacion' ahorro.id %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': '{{ csrf_token }}',
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                monto: document.querySelector('input[name="monto"]').value,
+                                descripcion: document.querySelector('textarea[name="descripcion"]').value
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Solicitud enviada',
+                                    text: 'La solicitud de autorización ha sido enviada a los demás usuarios.',
+                                    icon: 'success'
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: 'Hubo un error al enviar la solicitud.',
+                                    icon: 'error'
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                // Si no es un retiro grupal, enviar el formulario normalmente
+                event.target.submit();
+            }
+        });
+    </script>
 </body>
 </html>

@@ -280,22 +280,22 @@
         <div class="solicitud-list">
             <h3>Solicitudes de autorización</h3>
             <ul>
-                {% for solicitud in solicitudes %}
+                {% for solicitud in solicitudes_autorizacion %}
                     <li>
-                        <span>{{ solicitud.usuario.username }} solicita acceso a {{ solicitud.ahorro.nombre }}</span>
+                        <span>{{ solicitud.usuario.username }} solicita retirar ${{ solicitud.monto }} de {{ solicitud.ahorro.nombre }}</span>
                         <div class="solicitud-buttons">
-                            <form action="{% url 'aceptar_solicitud' solicitud.id %}" method="post">
+                            <form action="{% url 'autorizar_retiro' solicitud.id %}" method="post">
                                 {% csrf_token %}
-                                <button type="submit" class="btn-aceptar">Aceptar</button>
+                                <button type="submit" class="btn-aceptar">Autorizar</button>
                             </form>
-                            <form action="{% url 'rechazar_solicitud' solicitud.id %}" method="post">
+                            <form action="{% url 'rechazar_retiro' solicitud.id %}" method="post">
                                 {% csrf_token %}
                                 <button type="submit" class="btn-rechazar">Rechazar</button>
                             </form>
                         </div>
                     </li>
                 {% empty %}
-                    <li>No hay solicitudes pendientes.</li>
+                    <li>No hay solicitudes de autorización pendientes.</li>
                 {% endfor %}
             </ul>
         </div>

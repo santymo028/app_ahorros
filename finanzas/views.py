@@ -169,3 +169,81 @@ def registro(request):
     else:
         form = UserCreationForm()
     return render(request, 'finanzas/registro.html', {'form': form})
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from .models import Ahorro, SolicitudAutorizacion
+from django.contrib.auth.models import User
+
+@csrf_exempt
+def solicitar_autorizacion(request, ahorro_id):
+    if request.method == 'POST':
+        ahorro = get_object_or_404(Ahorro, id=ahorro_id)
+        monto = request.POST.get('monto')
+        descripcion = request.POST.get('descripcion')
+
+        # Crear la solicitud de autorización
+        solicitud = SolicitudAutorizacion.objects.create(
+            ahorro=ahorro,
+            usuario=request.user,
+            monto=monto,
+            descripcion=descripcion
+        )
+
+        # Notificar a los demás usuarios
+        for usuario in ahorro.usuarios_compartidos.all():
+            if usuario != request.user:
+                Notificacion.objects.create(
+                    usuario=usuario,
+                    mensaje=f"{request.user.username} ha solicitado retirar ${monto} del ahorro '{ahorro.nombre}'."
+                )
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+def autorizar_retiro(request, solicitud_id):
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudAutorizacion, id=solicitud_id)
+        ahorro = solicitud.ahorro
+
+        # Verificar si el usuario actual tiene permiso para autorizar
+        if request.user in ahorro.usuarios_compartidos.all():
+            # Realizar el retiro
+            ahorro.monto_actual -= solicitud.monto
+            ahorro.save()
+
+            # Eliminar la solicitud
+            solicitud.delete()
+
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'No tienes permiso para autorizar este retiro.'}, status=403)
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+def rechazar_retiro(request, solicitud_id):
+    if request.method == 'POST':
+        solicitud = get_object_or_404(SolicitudAutorizacion, id=solicitud_id)
+        ahorro = solicitud.ahorro
+
+        # Verificar si el usuario actual tiene permiso para rechazar
+        if request.user in ahorro.usuarios_compartidos.all():
+            # Eliminar la solicitud
+            solicitud.delete()
+
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'No tienes permiso para rechazar este retiro.'}, status=403)
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
+def marcar_notificacion_leida(request, notificacion_id):
+    if request.method == 'POST':
+        notificacion = get_object_or_404(Notificacion, id=notificacion_id)
+        notificacion.leida = True
+        notificacion.save()
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)

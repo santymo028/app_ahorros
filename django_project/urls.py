@@ -31,4 +31,9 @@ urlpatterns = [
     path('accounts/profile/', views.profile, name='profile'),  # Nueva ruta para el perfil
     path('agregar_contacto/', views.agregar_contacto, name='agregar_contacto'),
     path('eliminar_contacto/<str:nombre_usuario>/', views.eliminar_contacto, name='eliminar_contacto'),
+    path('rechazar_retiro/<int:solicitud_id>/', views.rechazar_retiro, name='rechazar_retiro'),
+    path('solicitar_autorizacion/<int:ahorro_id>/', views.solicitar_autorizacion, name='solicitar_autorizacion'),
+    path('autorizar_retiro/<int:solicitud_id>/', views.autorizar_retiro, name='autorizar_retiro'),
+    path('rechazar_retiro/<int:solicitud_id>/', views.rechazar_retiro, name='rechazar_retiro'),
+    path('marcar_notificacion_leida/<int:notificacion_id>/', views.marcar_notificacion_leida, name='marcar_notificacion_leida'),
 ]
