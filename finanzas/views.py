@@ -168,4 +168,4 @@ def registro(request):
             return redirect('home')  # Redirige a la página principal después del registro
     else:
         form = UserCreationForm()
-    return render(request, 'registration/registro.html', {'form': form})
+    return render(request, 'finanzas/registro.html', {'form': form})
